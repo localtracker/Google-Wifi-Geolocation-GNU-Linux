@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+from sys import exit
+import logging
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR) # set scapy logging
+from scapy.all import *
+import urllib2
+
+conf.verb = 0
+
+# Locates nearby access points for input to google maps api
+def access_point_locator(packet):
+    global access_point_counter
+    if packet.haslayer(Dot11Beacon) or packet.haslayer(Dot11ProbeResp):
+        if packet.haslayer(Dot11Elt):
+            ap_ssid = packet.info
+            ap_mac = packet.addr2
+            if ap_ssid != "":
+                ap_signal = -(256 - ord(packet.notdecoded[-4:-3]))
+                if (ap_mac, ap_ssid, ap_signal) not in mac_ssid_list:
+                    mac_ssid_list.append((ap_mac, ap_ssid, ap_signal))
+                    access_point_counter += 1
+                    print '[*] Found: ' + ap_mac + ' -- broadcasting -- ' + ap_ssid + ' -- signal strength -- ' + str(
+                        ap_signal)
+                if access_point_counter == 4: # increase this value to locate and pass more ap's in range
+                    geo_locator()
+                    exit()
+
+# Pass mac address, ssid and signal strength from located ap's to google maps api
+def geo_locator():
+    gl_url = 'https://maps.googleapis.com/maps/api/browserlocation/json?browser=firefox&sensor=true'
+    for (mac, ssid, sig) in mac_ssid_list:
+        gl_url += "&wifi=mac:%s%%7Cssid:%s%%7Css:%s" % (mac.replace(":", "-"), ssid.replace(" ", "%20"), sig)
+    api_response = urllib2.urlopen(gl_url).read() # reads the html response from server
+    latitude = re.compile('"lat" : (.+),').findall(api_response)[0]
+    longitude = re.compile('"lng" : (.+)').findall(api_response)[0]
+    accuracy = re.compile('"accuracy" : (.+),').findall(api_response)[0]
+    print '\nYour Location (as per google maps api):'
+    print 'Latitude: ' + latitude
+    print 'Longitude: ' + longitude
+    print 'Accuracy: Within ' + accuracy + ' mts'
+
+if __name__ == "__main__":
+    mac_ssid_list = []
+    access_point_counter = 0
+    try:
+        interface = raw_input("Enter your monitor interface (ex: mon0): ")
+        sniff(iface=interface, prn=access_point_locator, store=0)
+        sys.exit()
+    except Exception, e:
+        print '[!] Something Happened!'
+        print str(e)
