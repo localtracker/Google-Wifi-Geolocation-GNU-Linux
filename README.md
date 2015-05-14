@@ -3,7 +3,7 @@
 
 Script written in python to determine your current GPS co-ordinates through the nearby wireless access points. 
 
-The Google maps API helps you locate yourself by passing a list of nearby access points to the API. The signal strength plays an important role in this. The GPS co-ordinates and the accuracy of the positioning depends on how far/close you are located from these access points. The signal strength, MAC address and SSID being broadcasted can be viewed when you run the script. Very soon you will understand how this works and be able to come up with creative ways to find someone else's position, instead of yours. You might want to query multiple times and take an average.
+The Google maps API helps you locate yourself by passing a list of nearby access points to the API. The signal strength plays an important role in this. The GPS co-ordinates and the accuracy of the positioning depends on how far/close you are located from these access points. The signal strength, MAC address and SSID being broadcasted can be viewed when you run the script. Very soon you will understand how this works and be able to come up with creative ways to find someone else's position, instead of yours. In my testing, I found that 2-4 access points work best instead of 20. You might want to query multiple times and take an average.
 
 ## Requirements
 
